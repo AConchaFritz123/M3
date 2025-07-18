@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Misión Equilibrio!</title>
+    
+    <!-- Librerías Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        /* CSS (style.css) */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --bg-color: #ecf0f1;
+            --text-color: #34495e;
+            --light-color: #ffffff;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Reset y configuración base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Contenedor Principal */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-top: 80px; /* Espacio para la barra de progreso */
+        }
+
+        /* Estructura de Secciones */
+        .seccion {
+            display: none; /* Ocultas por defecto */
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .seccion.active {
+            display: block;
+        }
+        
+        /* Tipografía y Textos */
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 { font-size: 2.8em; }
+        h2 { font-size: 2.2em; }
+        h3 { font-size: 1.8em; }
+        
+        p, li {
+            text-align: justify;
+            margin-bottom: 15px;
+        }
+
+        /* Elementos UI (Botones, Formularios) */
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, var(--secondary-color), #2980b9);
+            color: var(--light-color);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-center {
+            display: block;
+            width: fit-content;
+            margin: 20px auto 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+        }
+        
+        .form-group input:invalid:not(:placeholder-shown) {
+            border-color: var(--error-color);
+        }
+        
+        .form-group .feedback {
+            display: none;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .form-group input:invalid:not(:placeholder-shown) + .feedback {
+            display: block;
+            color: var(--error-color);
+        }
+
+        /* SVGs y Elementos Visuales */
+        .svg-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        #animated-svg {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+        }
+
+        /* Barra de Progreso */
+        #progress-bar-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-color: #bdc3c7;
+            z-index: 1000;
+        }
+        
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--success-color);
+            transition: width 0.5s ease-in-out;
+        }
+        
+        /* Menú Flotante */
+        #floating-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+        
+        #floating-menu-btn {
+            background: var(--primary-color);
+            color: var(--light-color);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        #menu-links {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 60px;
+            background: var(--light-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            list-style: none;
+            overflow: hidden;
+        }
+        
+        #menu-links a {
+            display: block;
+            padding: 12px 25px;
+            text-decoration: none;
+            color: var(--primary-color);
+            transition: background-color 0.3s;
+            white-space: nowrap;
+        }
+        
+        #menu-links a:hover {
+            background-color: var(--bg-color);
+        }
+        
+        /* Video Quiz Modal */
+        #video-quiz-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        #video-quiz-content {
+            background: var(--light-color);
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            text-align: left;
+            animation: fadeIn 0.5s;
+        }
+        
+        #video-quiz-options button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            text-align: left;
+            background: var(--bg-color);
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #video-quiz-options button:hover {
+            border-color: var(--secondary-color);
+            background-color: #dbeaf5;
+        }
+
+        #video-quiz-feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        /* Evaluación Final */
+        #final-test-form .question {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        #final-test-form .options label {
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        #final-test-form .options label:hover {
+            background-color: #eaf2f8;
+        }
+
+        #final-test-form .options input[type="radio"]:checked + span {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .feedback-correct {
+             background-color: #d4edda;
+             border-left: 5px solid var(--success-color);
+        }
+        .feedback-incorrect {
+             background-color: #f8d7da;
+             border-left: 5px solid var(--error-color);
+        }
+        
+        #timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Síntesis e Infografía */
+        .ideas-clave {
+            list-style: none;
+            padding-left: 0;
+        }
+        .ideas-clave li {
+            background: #eaf2f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--secondary-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .ideas-clave .icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        /* Cierre y Rúbrica */
+        .metacognitive-question {
+            margin-bottom: 20px;
+        }
+        .metacognitive-question textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+            resize: vertical;
+        }
+        
+        .rubrica {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        .rubrica th, .rubrica td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: left;
+        }
+        .rubrica th {
+            background-color: var(--primary-color);
+            color: var(--light-color);
+        }
+        .rubrica tbody tr:nth-child(even) {
+            background-color: var(--bg-color);
+        }
+
+        /* Certificado */
+        #certificate-wrapper {
+            padding: 20px;
+            border: 10px solid var(--primary-color);
+            background: var(--light-color);
+        }
+
+        #certificate-content {
+            border: 2px dashed var(--secondary-color);
+            padding: 30px;
+            text-align: center;
+        }
+
+        #certificate-content h2 {
+            color: var(--secondary-color);
+            font-size: 2.5em;
+        }
+        
+        #certificate-content p {
+            font-size: 1.2em;
+            text-align: center;
+        }
+        
+        #qr-code-container {
+            margin: 20px auto;
+            width: 150px;
+            height: 150px;
+        }
+
+        /* Botón Flotante Chatbot */
+        #chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1002;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s;
+        }
+        
+        #chatbot-button:hover {
+            transform: scale(1.1);
+        }
+        
+        #chatbot-modal {
+            display: none;
+            position: fixed;
+            z-index: 1999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #chatbot-modal-content {
+            width: 90%;
+            height: 80%;
+            max-width: 500px;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #chatbot-modal-header {
+            padding: 10px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #close-chatbot {
+            font-size: 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: white;
+        }
+        
+        #chatbot-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Utilidades */
+        .text-center { text-align: center; }
+        .responsive-iframe {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            margin: 20px 0;
+        }
+
+        .responsive-iframe iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Responsividad */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2em; }
+            h2 { font-size: 1.8em; }
+            
+            #floating-menu {
+                top: 15px;
+                right: 15px;
+            }
+            
+            .container {
+                padding: 10px;
+                padding-top: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Barra de Progreso y Menú -->
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="floating-menu">
+        <button id="floating-menu-btn">☰</button>
+        <ul id="menu-links">
+            <li><a href="#portada">Portada</a></li>
+            <li><a href="#introduccion">Introducción</a></li>
+            <li><a href="#activacion">Activación</a></li>
+            <li><a href="#desarrollo">Desarrollo</a></li>
+            <li><a href="#evaluacion-formativa">Eval. Formativa</a></li>
+            <li><a href="#evaluacion">Evaluación Final</a></li>
+            <li><a href="#sintesis">Síntesis</a></li>
+            <li><a href="#cierre">Cierre</a></li>
+            <li><a href="#certificado">Certificado</a></li>
+        </ul>
+    </div>
+    
+    <!-- Contenido Principal -->
+    <div class="container">
+
+        <!-- 1. Formulario de Ingreso -->
+        <section id="ingreso" class="seccion active">
+            <h2>Bienvenido a ¡Misión Equilibrio!</h2>
+            <p>Por favor, ingresa tus datos para comenzar. Esta información es necesaria para generar tu certificado de participación al finalizar la cápsula educativa.</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="nombre">Nombre Completo</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Ej: Ana Pérez" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input type="email" id="email" name="email" placeholder="ej: ana.perez@correo.com" required>
+                     <span class="feedback">Por favor, introduce un correo válido.</span>
+                </div>
+                <div class="form-group">
+                    <label for="rut">RUT (Opcional)</label>
+                    <input type="text" id="rut" name="rut" placeholder="Ej: 12.345.678-9">
+                </div>
+                <button type="submit" class="btn btn-center">Guardar y Continuar</button>
+            </form>
+        </section>
+
+        <!-- 2. Sección "Portada" -->
+        <section id="portada" class="seccion">
+            <h1>¡Misión Equilibrio!</h1>
+            <p class="text-center">Una aventura interactiva en el corazón de la Química</p>
+            <div class="svg-container">
+                <!-- SVG de balanza en equilibrio con moléculas -->
+                <svg id="animated-svg" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                    <style>
+                        .beam { transition: transform 0.5s ease-in-out; transform-origin: 100px 30px; }
+                        .pan { transition: transform 0.5s ease-in-out; }
+                        #pan-left { transform-origin: 30px 60px; }
+                        #pan-right { transform-origin: 170px 60px; }
+                    </style>
+                    <g fill="#2c3e50">
+                        <rect x="95" y="30" width="10" height="100" rx="2"/>
+                        <rect x="70" y="130" width="60" height="10" rx="2"/>
+                    </g>
+                    <g class="beam" id="scale-beam">
+                        <polygon points="20,30 180,30 100,10" fill="#3498db"/>
+                        <path d="M 100 30 L 30 60 M 100 30 L 170 60" stroke="#3498db" stroke-width="3" fill="none"/>
+                    </g>
+                    <g class="pan" id="pan-left">
+                        <path d="M 10 70 Q 30 90 50 70" stroke="#7f8c8d" stroke-width="2" fill="none"/>
+                        <circle cx="15" cy="100" r="3" fill="#e74c3c"/>
+                        <circle cx="30" cy="105" r="4" fill="#e74c3c"/>
+                        <circle cx="45" cy="100" r="3" fill="#e74c3c"/>
+                    </g>
+                    <g class="pan" id="pan-right">
+                         <path d="M 150 70 Q 170 90 190 70" stroke="#7f8c8d" stroke-width="2" fill="none"/>
+                         <circle cx="160" cy="102" r="4" fill="#2ecc71"/>
+                         <circle cx="175" cy="105" r="5" fill="#2ecc71"/>
+                         <circle cx="185" cy="98" r="3" fill="#2ecc71"/>
+                    </g>
+                </svg>
+            </div>
+            <button id="start-btn" class="btn btn-center">Comenzar Misión</button>
+        </section>
+
+        <!-- 3. Sección "Introducción" -->
+        <section id="introduccion" class="seccion">
+            <h2>Introducción al Equilibrio Químico</h2>
+            
+            <p style="text-align: left; background-color: #eaf2f8; padding: 15px; border-radius: 8px; border-left: 5px solid var(--secondary-color); margin-bottom: 25px;">Esta cápsula tributa a los Resultados de Aprendizaje del Curso QUI1145:<br><br>
+                <strong>RA1:</strong> Utiliza la química en el contexto actual de la Ingeniería aplicando principios básicos y el lenguaje propio de la asignatura para resolver problemas representativos y relevantes. (CE, CG)<br><br>
+                <strong>RA2:</strong> Aplica procedimientos elementales de laboratorio para la resolución de problemas propios de la ingeniería, a través de la búsqueda y selección de fuentes bibliográficas de la disciplina,  aplicando el razonamiento lógico matemático (CE, CG)
+            </p>
+
+            <div style="display: flex; justify-content: space-around; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Desempeños</h3>
+                    <p>Al finalizar esta cápsula, serás capaz de:</p>
+                    <ul>
+                        <li>Definir el equilibrio químico como un proceso dinámico y reversible.</li>
+                        <li>Explicar la relación entre las velocidades de las reacciones directa e inversa en el estado de equilibrio.</li>
+                        <li>Escribir la expresión de la constante de equilibrio (Kc) para una reacción química dada.</li>
+                        <li>Interpretar el significado de la constante de equilibrio en términos de las concentraciones de reactivos y productos.</li>
+                    </ul>
+                     <h3>Público Objetivo</h3>
+                     <p>Este material está diseñado para estudiantes de educación superior que se inician en el estudio de la química general y la fisicoquímica.</p>
+                     
+                     <h3>Uso Responsable de IA</h3>
+                     <p>Se alienta el uso de herramientas de Inteligencia Artificial como apoyo para la comprensión de conceptos y la búsqueda de información. Sin embargo, todas las respuestas en evaluaciones y actividades reflexivas deben ser de autoría propia, reflejando un entendimiento personal y original. El plagio o el uso indebido de IA en tareas evaluadas será considerado una falta académica.</p>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Transcripción del Video Principal</h3>
+                    <div style="height: 250px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+                        <p>Hola, hoy vamos a hablar del equilibrio químico. Para entender el concepto de equilibrio, vamos a comenzar con un ejemplo práctico...</p>
+                        <!-- Transcripción completa del prompt -->
+                         <p>Supongamos que tenemos dos frascos de acetona, que todos sabemos que es un líquido muy volátil, que si nos imaginamos que uno de los frascos, nosotros lo dejamos destapado, y luego, tiempo después, observamos cierto el frasco y vamos a darnos cuenta de que parte del líquido se pudo evaporar, pues nosotros podemos comprobar que el volumen del frasco que tenía la acetona ha disminuido.</p>
+                        <p>Si el otro frasco permanece cerrado, entonces vamos a observar que el volumen permanece constante. Entonces aquí vamos a establecer un equilibrio entre dos cambios de la materia, que son la evaporación y la condensación. Como la acetona es un líquido muy volátil, tiene facilidad para que las partículas pasen desde el estado líquido al estado gaseoso.</p>
+                        <p>Por lo tanto, si nosotros dejamos el frasco destapado, entonces las moléculas que pasan al estado gaseoso se esparcen y ya no quedan dentro del recipiente y por lo tanto observamos que el volumen disminuye. El frasco que tenía la tapa no es que no le está ocurriendo nada, no es que la acetona no se esté evaporando. En ese frasco, si están los dos frascos a la misma temperatura, entonces el frasquito que está con tapa, esa acetona también se está evaporando.</p>
+                        <p>Pero lo que ocurre es que las moléculas suben y se encuentran con la barrera que es la tapa del frasco y por lo tanto no se escapan, no se esparcen. ¿Por qué el volumen del líquido permanece constante si igual estamos diciendo que la sustancia se va a evaporar? Sucede entonces que las moléculas chocan con la barrera que es la tapita del frasco o las paredes más altas y por lo tanto en ese momento también ocurre el otro proceso que es la condensación. Es decir, que las moléculas gaseosas pasan al estado líquido.</p>
+                        <p>Por lo tanto, a la misma velocidad que la acetona se está evaporando, también se está condensando y por lo tanto nosotros no observamos un cambio aparente en el volumen de la acetona. Establecemos entonces dentro del frasco que tiene la tapita que está ocurriendo un equilibrio entre la condensación y la evaporación. Vamos a llevar esto ahora a una reacción química.</p>
+                        <p>Sucede que las reacciones químicas no todas ocurren de tal manera que se complete en forma total. Es decir, que todos los reactivos se consuman y forman el producto. Vamos a explicar el concepto de equilibrio con un ejemplo de reacción química que es la que aparece acá.</p>
+                        <p>Tenemos entonces hidrógeno gaseoso que es incoloro y lo vamos a hacer reaccionar con el yodo gaseoso que es de color púrpura. En la reacción del hidrógeno con el yodo se va a formar este compuesto que es el yoduro de hidrógeno que cuando está puro es incoloro. Si nosotros llevamos a cabo esa reacción, entonces juntamos el hidrógeno con el yodo y como se va a formar el producto de esa reacción, el yoduro de hidrógeno, lo que esperaríamos es que la solución finalmente sea incolora.</p>
+                        <p>Pues el producto de esa reacción es incoloro. Si realizamos entonces, en la práctica esta reacción no sucede esto. Observamos que cuando ya no se observan cambios, la solución sigue siendo púrpura, pero de un color menos intenso que la del yodo.</p>
+                        <p>¿Esto qué quiere decir? Esto quiere decir entonces que no se ha formado todo el yoduro de hidrógeno a partir de las cantidades de los reactantes que nosotros esperábamos, y que si la solución, si la mezcla está del color púrpura, esto significa que en el recipiente donde se está llevando a cabo la reacción todavía tenemos la presencia de yodo. Es un color menos intenso, porque obviamente se ha generado yoduro de hidrógeno, pero si está púrpura, eso significa que todavía está presente el yoduro de hidrógeno. Esto se explica porque las reacciones son reversibles.</p>
+                        <p>¿Qué significa que sean reversibles? Que este producto también se puede descomponer y formar los reactantes. Es decir, que vamos a tener aquí también una reacción que va hacia la formación de los reactantes. Entonces decíamos que no todas las reacciones se completan desde reactivos a productos, sino que llega un determinado momento el producto también en este caso se puede descomponer en sus respectivos elementos.</p>
+                        <p>Tenemos entonces aquí una reacción directa y una reaction inversa, que sería la descomposición del yoduro de hidrógeno en hidrógeno y yodo. Y de esta manera explicamos que cuando nosotros llevamos a cabo esta reacción, no aparece la solución incolora, sino que queda púrpura, porque este compuesto se está descomponiendo también en hidrógeno y yodo y por lo tanto sigue permaneciendo el color púrpura. ¿Cuándo se va a lograr el equilibrio en esta reacción? Tal como en el frasquito de acetona que tenía la tapa, nosotros sabíamos que ahí está, no es que no esté pasando nada, no es que las moléculas no se están evaporando como en el otro frasco.</p>
+                        <p>Sí se están evaporando, pero sabemos que también se están condensando, por lo tanto en ese caso la condensación es como la reacción inversa. Sabemos además que en el frasco de acetona que tiene la tapita, el volumen no va a variar y por lo tanto, si no varía el volumen y sabemos que sí está ocurriendo algo, que sí se está evaporando y que también se está condensando, si nosotros no observamos variación en el volumen, eso significa que la velocidad de evaporación es igual a la velocidad de condensación. Y por lo tanto, como la evaporación y la condensación ocurren a las mismas velocidades, nosotros no observamos que varía el volumen de la acetona dentro del frasquito que tiene la tapita cerrada y por lo tanto aparentemente vemos que no pasa nada.</p>
+                        <p>Pero ya sabemos, ¿cierto?, que a nivel molecular sí está ocurriendo la evaporación y la condensación. Lo mismo ocurre entonces en una reacción química. Los reactantes forman el producto y el producto a su vez se comienza a descomponer para formar los reactantes.</p>
+                        <p>¿Cuándo se va a lograr el equilibrio? Cuando nosotros no observemos un cambio aparente cierto en nuestra reacción. Es decir, en este caso, si juntamos el hidrógeno con el yodo, la mezcla va a estar de un color púrpura intenso. Una vez que se comienza a formar el yoduro de hidrógeno, ese color púrpura comienza a disminuir en su intensidad.</p>
+                        <p>Y cuando ya observamos que no disminuye la intensidad del color, entonces decimos que esta reacción llegó al equilibrio. Ya no hay cambio aparente. Si llegó al equilibrio, eso no significa que ahí no está pasando nada.</p>
+                        <p>Al igual que en el frasquito cierto de la acetona, nosotros sabíamos que no había variación en el volumen, pero sabemos que eso no significa que no esté pasando nada. Seguía ocurriendo la evaporación y la condensación. Acá igual.</p>
+                        <p>Si ya no hay cambio en la intensidad del color, eso significa que se logró el equilibrio. Y que las concentraciones, en este caso del producto y de los reactivos, ya no van a variar. A través del tiempo, las concentraciones van a permanecer constantes.</p>
+                        <p>Dijimos que en el frasquito de la acetona, cuando no había cambio en el volumen, era porque la velocidad de evaporación era igual a la velocidad de condensación. Acá pasa lo mismo. Cuando ya no hay variación en el color, en la intensidad del color púrpura, entonces eso significa que la velocidad de formación de yoduro de hidrógeno va a ser igual a la velocidad de descomposición del yoduro de hidrógeno.</p>
+                        <p>Es decir que las velocidades hacia ambos lados de la reacción son iguales. Si las velocidades son iguales, entonces ya no vamos a observar cambios aparentes. No van a haber cambios en la concentración de reactivos y productos.</p>
+                        <p>Sin embargo, sabemos que el proceso sigue. Dijimos que esto es un equilibrio dinámico. El proceso sigue porque el yodo y el hidrógeno siguen formando yoduro de hidrógeno, pero no va a variar, no va a aumentar esta concentración.</p>
+                        <p>No va a disminuir, por lo tanto, la intensidad del color, porque a la misma velocidad este producto se está descomponiendo en el yodo y en el hidrógeno. Lo que tenemos entonces en la situación de equilibrio es lo siguiente. Sabemos que en el equilibrio la velocidad directa, es decir, la velocidad con la que se está formando el yoduro de hidrógeno, tiene que ser igual a la velocidad a la cual se está descomponiendo en los respectivos elementos.</p>
+                        <p>En el equilibrio, entonces, la velocidad directa, es decir, hacia la formación del producto, tiene que ser igual a la velocidad inversa, que es desde los productos hacia los reactivos. La velocidad directa, entonces, va a ser igual a una constante de proporcionalidad, o una constante de velocidad, por la concentración de los dos reactivos. O sea, la velocidad va a depender, en este caso, de las cantidades de reactivos que nosotros tenemos, de la concentración de esos reactivos.</p>
+                        <p>Entonces, la velocidad hacia la formación del yoduro de hidrógeno va a ser igual a una constante de velocidad de proporcionalidad por la concentración de los reactivos, para que se pueda formar el yoduro de hidrógeno. Y la velocidad inversa, es decir, la velocidad de descomposición, va a ser igual, también, a una constante de proporcionalidad, pero ahora hacia el otro sentido, que vamos a llamar K2, por la concentración de este yoduro de hidrógeno. Y aquí aparece el cuadrado, porque tiene que ir elevado a su coeficiente estequiométrico.</p>
+                        <p>Lo que estamos diciendo aquí, cierto, es que se están formando dos moles de yoduro de hidrógeno. Entonces, cierto, se está formando dos veces este producto, y por lo tanto, si nosotros lo multiplicamos, igual que eso, nos queda al cuadrado. Si establecemos una relación entre la velocidad directa y la velocidad inversa en el equilibrio, porque ya sabemos que en ese momento son iguales, entonces, la relación va a ser K1 partido por K2, y eso nos va a dar igual a la concentración de yoduro de hidrógeno al cuadrado, dividido en la concentración de hidrógeno, por la concentración de yodo.</p>
+                        <p>Esto quiere decir, entonces, que la constante del equilibrio, porque en este momento, cuando nosotros igualamos las velocidades, se está estableciendo el equilibrio en la reacción. Es decir, que aparentemente no pasa nada, pero nosotros ya sabemos que a nivel molecular sí está ocurriendo, solo que en ambas velocidades. Entonces, a esta relación entre la constante de velocidad directa e inversa, le vamos a llamar constante de equilibrio.</p>
+                        <p>Y esta constante de equilibrio, por lo tanto, siempre va a tener una expresión en donde vamos a tener la concentración de los productos, cierto, el yoduro de hidrógeno era el producto, dividido en la concentración de los reactantes. Cada una de esas concentraciones va elevada a su coeficiente estequiométrico. Es decir, aquí la concentración de yoduro de hidrógeno elevado al cuadrado, porque el coeficiente estequiométrico ahí es 2. Esta constante de equilibrio nos va a servir para encontrar cuáles son las concentraciones, o para regular las concentraciones de toda la especie en cualquier reacción química, cuando decimos que la reacción llegó al final.</p>
+                        <p>Es decir, que ya no hay cambio en las concentraciones. Pero sabemos que ese estado final no es un estado estacionario, sino que es un estado dinámico y que nosotros vamos a llamar equilibrio. Ahí se estableció el equilibrio porque ya no hay variación en las concentraciones.</p>
+                        <p>Pero es dinámico porque sabemos que está ocurriendo una reacción en ambos sentidos. A esta constante entonces se le conoce, y la podemos encontrar nosotros los valores para cada reacción, tabulados en la bibliografía, y aparece como Kc, que significa que es la constante de equilibrio en función de la concentración. Nos damos cuenta que lo que nos quedó aquí es una ecuación en donde tenemos la concentración de yoduro de hidrógeno, la concentración de hidrógeno y la concentración de yodo.</p>
+                        <p>Por lo tanto, ¿cierto?, es una constante que se establece en función de las concentraciones de los reactivos y productos, y por lo tanto, por eso se conoce como Kc. Esta Kc, como les mencionaba, aparecen los valores para cada reacción tabuladas en bibliografía, pero este valor va a depender de la temperatura a la cual se lleve a cabo la reacción. Si variamos la temperatura, entonces el valor de la constante va a variar.</p>
+                        <p>Va a ser constante solamente cuando se mantenga también constante la temperatura.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Sección "Activación" -->
+        <section id="activacion" class="seccion">
+            <h2>Activación de Conocimientos Previos</h2>
+            <p>¡Es hora de calentar motores! Interactúa con el siguiente juego para recordar algunos conceptos clave antes de sumergirnos en el equilibrio químico.</p>
+            <div class="responsive-iframe" style="padding-top: 86.79%; /* 690 / 795 */">
+                <iframe allow="fullscreen; autoplay; allow-top-navigation-by-user-activation" allowfullscreen width="795" height="690" frameborder="0" src="https://es.educaplay.com/juego/24647918-aventuras_en_el_equilibrio_quimico.html"></iframe>
+            </div>
+        </section>
+
+        <!-- 5. Sección "Desarrollo" -->
+        <section id="desarrollo" class="seccion">
+            <h2>Desarrollo: El Corazón del Equilibrio</h2>
+            <p>Observa con atención el siguiente video. Se pausará automáticamente en momentos clave para que respondas algunas preguntas y refuerces tu aprendizaje.</p>
+            <div id="player-container" class="responsive-iframe">
+                <div id="player"></div>
+            </div>
+            
+             <!-- Modal para el Video-Quiz -->
+            <div id="video-quiz-modal">
+                <div id="video-quiz-content">
+                    <h3 id="video-quiz-question"></h3>
+                    <div id="video-quiz-options"></div>
+                    <div id="video-quiz-feedback"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 6. Sección "Evaluación formativa" -->
+        <section id="evaluacion-formativa" class="seccion">
+            <h2>Evaluación Formativa</h2>
+            <p>¡Aplica lo aprendido! Este juego te permitirá evaluar tu comprensión de los conceptos de manera lúdica y sin presiones.</p>
+             <div style="width:100%;display:flex;flex-direction:column;gap:8px;min-height:635px;">
+                 <iframe src="https://wayground.com/embed/quiz/68783c9e427477b768bd5288" title="Evaluación Formativa - Equilibrio Químico - Wayground" style="flex:1;" frameBorder="0" allowfullscreen></iframe>
+             </div>
+        </section>
+
+        <!-- 7. Sección "Evaluación" -->
+        <section id="evaluacion" class="seccion">
+            <h2>Evaluación Final</h2>
+            <p>Has llegado a la prueba final. Tienes <strong>15 minutos</strong> y <strong>3 intentos</strong> para demostrar tu dominio del equilibrio químico. Necesitas un <strong>60%</strong> para aprobar. ¡Mucha suerte!</p>
+            <div id="timer">15:00</div>
+            <p id="attempts-info">Intentos restantes: 3</p>
+            <form id="final-test-form">
+                <div class="question" id="q1">
+                    <p><strong>1. ¿Qué característica principal define un equilibrio químico?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q1" value="a"> <span>Los reactivos se consumen por completo.</span></label>
+                        <label><input type="radio" name="q1" value="b"> <span>Las velocidades de la reacción directa e inversa se igualan.</span></label>
+                        <label><input type="radio" name="q1" value="c"> <span>La reacción se detiene por completo a nivel molecular.</span></label>
+                        <label><input type="radio" name="q1" value="d"> <span>Solo los productos están presentes al final.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q2">
+                    <p><strong>2. En el ejemplo de la acetona en un frasco cerrado, ¿por qué el volumen del líquido permanece constante?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q2" value="a"> <span>Porque la acetona deja de evaporarse.</span></label>
+                        <label><input type="radio" name="q2" value="b"> <span>Porque la tapa impide cualquier cambio de estado.</span></label>
+                        <label><input type="radio" name="q2" value="c"> <span>Porque la velocidad de evaporación es igual a la de condensación.</span></label>
+                        <label><input type="radio" name="q2" value="d"> <span>Porque la presión externa equilibra la presión interna.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q3">
+                    <p><strong>3. ¿Qué significa que una reacción sea "reversible"?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q3" value="a"> <span>La reacción puede ocurrir en la oscuridad.</span></label>
+                        <label><input type="radio" name="q3" value="b"> <span>Los productos pueden reaccionar para volver a formar los reactivos.</span></label>
+                        <label><input type="radio" name="q3" value="c"> <span>Se necesita un catalizador para que ocurra.</span></label>
+                        <label><input type="radio" name="q3" value="d"> <span>La reacción libera y absorbe calor al mismo tiempo.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q4">
+                    <p><strong>4. Para la reacción H₂(g) + I₂(g) ⇌ 2HI(g), ¿cuál es la expresión correcta para la constante de equilibrio (Kc)?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q4" value="a"> <span>Kc = [H₂][I₂] / [HI]</span></label>
+                        <label><input type="radio" name="q4" value="b"> <span>Kc = [HI] / ([H₂][I₂])</span></label>
+                        <label><input type="radio" name="q4" value="c"> <span>Kc = [HI]² / ([H₂][I₂])</span></label>
+                        <label><input type="radio" name="q4" value="d"> <span>Kc = [H₂][I₂] / [HI]²</span></label>
+                    </div>
+                </div>
+                 <div class="question" id="q5">
+                    <p><strong>5. Cuando un sistema alcanza el equilibrio químico, ¿qué ocurre con las concentraciones de reactivos y productos?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q5" value="a"> <span>Se igualan entre sí.</span></label>
+                        <label><input type="radio" name="q5" value="b"> <span>Se vuelven cero.</span></label>
+                        <label><input type="radio" name="q5" value="c"> <span>Continúan cambiando aleatoriamente.</span></label>
+                        <label><input type="radio" name="q5" value="d"> <span>Permanecen constantes en el tiempo.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q6">
+                    <p><strong>6. Si el valor de la constante de equilibrio (Kc) es muy grande (Kc >> 1), ¿qué indica esto sobre la reacción en equilibrio?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q6" value="a"> <span>La reacción apenas ha ocurrido.</span></label>
+                        <label><input type="radio" name="q6" value="b"> <span>Las concentraciones de reactivos y productos son iguales.</span></label>
+                        <label><input type="radio" name="q6" value="c"> <span>El equilibrio favorece fuertemente la formación de productos.</span></label>
+                        <label><input type="radio" name="q6" value="d"> <span>El equilibrio favorece fuertemente la presencia de reactivos.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q7">
+                    <p><strong>7. La frase "el equilibrio químico es dinámico" significa que:</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q7" value="a"> <span>Las concentraciones de las sustancias cambian constantemente.</span></label>
+                        <label><input type="radio" name="q7" value="b"> <span>La reacción se detiene y luego se reinicia.</span></label>
+                        <label><input type="radio" name="q7" value="c"> <span>Las reacciones directa e inversa continúan ocurriendo a nivel molecular.</span></label>
+                        <label><input type="radio" name="q7" value="d"> <span>La temperatura del sistema fluctúa.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q8">
+                    <p><strong>8. Según el video, ¿de qué factor principal depende el valor de la constante de equilibrio (Kc)?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q8" value="a"> <span>De la presión inicial.</span></label>
+                        <label><input type="radio" name="q8" value="b"> <span>De la concentración inicial de los reactivos.</span></label>
+                        <label><input type="radio" name="q8" value="c"> <span>De la temperatura a la que se realiza la reacción.</span></label>
+                        <label><input type="radio" name="q8" value="d"> <span>Del volumen del recipiente.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q9">
+                    <p><strong>9. En la reacción entre hidrógeno y yodo, la evidencia visual de que se ha alcanzado un equilibrio es que:</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q9" value="a"> <span>El color púrpura desaparece por completo.</span></label>
+                        <label><input type="radio" name="q9" value="b"> <span>El sistema se vuelve incoloro instantáneamente.</span></label>
+                        <label><input type="radio" name="q9" value="c"> <span>La intensidad del color púrpura pálido deja de cambiar con el tiempo.</span></label>
+                        <label><input type="radio" name="q9" value="d"> <span>Se forma un precipitado sólido de yoduro de hidrógeno.</span></label>
+                    </div>
+                </div>
+                <div class="question" id="q10">
+                    <p><strong>10. En un sistema en equilibrio, ¿cuál de las siguientes afirmaciones es SIEMPRE verdadera?</strong></p>
+                    <div class="options">
+                        <label><input type="radio" name="q10" value="a"> <span>La concentración de productos es igual a la de los reactivos.</span></label>
+                        <label><input type="radio" name="q10" value="b"> <span>Las velocidades de la reacción directa e inversa son iguales y distintas de cero.</span></label>
+                        <label><input type="radio" name="q10" value="c"> <span>No ocurre nada a nivel molecular.</span></label>
+                        <label><input type="radio" name="q10" value="d"> <span>La suma de las masas de los reactivos es igual a la de los productos.</span></label>
+                    </div>
+                </div>
+                <button type="submit" id="submit-test-btn" class="btn btn-center">Calificar Examen</button>
+            </form>
+            <div id="test-results" class="text-center" style="margin-top: 20px;"></div>
+            <button id="retry-test-btn" class="btn btn-center" style="display:none;">Intentar de Nuevo</button>
+        </section>
+
+        <!-- 8. Sección "Síntesis" -->
+        <section id="sintesis" class="seccion">
+            <h2>Síntesis de la Misión</h2>
+            <h3>Ideas Clave para Recordar</h3>
+            <ul class="ideas-clave">
+                <li>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.08 8.58002C21.08 8.58002 21.36 12.51 18.8 14.98C16.24 17.45 12.56 17.27 12.56 17.27M12.56 17.27L10.7 19.14L10.04 21.5L12.4 20.84L14.26 18.98L12.56 17.27Z" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.92 15.42C2.92 15.42 2.64 11.49 5.2 8.93002C7.76 6.37002 11.44 6.55002 11.44 6.55002M11.44 6.55002L13.3 4.68002L13.96 2.50002L11.6 3.16002L9.74 5.02002L11.44 6.55002Z" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.14 3.86002L7.85999 12.14" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <strong>Equilibrio Dinámico:</strong> El equilibrio no es estático. Las reacciones directa e inversa continúan ocurriendo, pero a la misma velocidad, resultando en concentraciones netas constantes.
+                </li>
+                <li>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 13.13V15.07C2 18.37 4.14 20.5 7.45 20.5H16.55C19.86 20.5 22 18.37 22 15.07V8.93C22 5.63 19.86 3.5 16.55 3.5H7.45C4.14 3.5 2 5.63 2 8.93" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.93 12.99L15.5 10.42M15.5 10.42V12.69M15.5 10.42H13.23M11.07 11.01L8.5 13.58M8.5 13.58V11.31M8.5 13.58H10.77" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <strong>Condiciones para el Equilibrio:</strong> Se logra cuando V(directa) = V(inversa). Esto solo puede ocurrir en un sistema cerrado donde las concentraciones de todas las especies permanecen constantes.
+                </li>
+                <li>
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" stroke="#3498db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><text x="12" y="16" font-family="Arial, sans-serif" font-size="10" fill="#3498db" text-anchor="middle" font-weight="bold">Kc</text></svg>
+                    <strong>Constante de Equilibrio (Kc):</strong> Es un valor numérico que relaciona las concentraciones de productos y reactivos en equilibrio. Su fórmula es Kc = [Productos]^coef / [Reactivos]^coef. Su valor indica si el equilibrio favorece a los productos (Kc > 1) o a los reactivos (Kc < 1).
+                </li>
+            </ul>
+            
+            <h3>Podcast Resumen</h3>
+            <p>Escucha este breve podcast para consolidar las ideas más importantes de la misión.</p>
+            <iframe width="100%" height="300" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/2131861062&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>
+        </section>
+
+        <!-- 9. Sección "Cierre y preguntas metacognitivas" -->
+        <section id="cierre" class="seccion">
+            <h2>Cierre y Reflexión Final</h2>
+            <p>La misión está casi completa. Tómate un momento para reflexionar sobre tu proceso de aprendizaje. Estas respuestas te ayudarán a consolidar tu conocimiento.</p>
+            
+            <div class="metacognitive-question">
+                <label for="meta1"><strong>1. ¿Cuál fue el concepto más desafiante que encontraste en esta lección y qué pasos tomaste para comprenderlo mejor?</strong></label>
+                <textarea id="meta1" placeholder="Describe tu principal dificultad y cómo la superaste..."></textarea>
+            </div>
+            <div class="metacognitive-question">
+                <label for="meta2"><strong>2. ¿Cómo puedes aplicar el concepto de equilibrio dinámico a un fenómeno del mundo real que hayas observado (fuera de la química)?</strong></label>
+                <textarea id="meta2" placeholder="Piensa en ejemplos en biología, economía, vida diaria..."></textarea>
+            </div>
+             <div class="metacognitive-question">
+                <label for="meta3"><strong>3. Después de completar este módulo, ¿qué nuevas preguntas tienes sobre las reacciones químicas o el equilibrio?</strong></label>
+                <textarea id="meta3" placeholder="Anota cualquier curiosidad o duda que te haya surgido..."></textarea>
+            </div>
+            <button id="save-meta-btn" class="btn btn-center">Guardar mis Reflexiones</button>
+            
+            <h3 style="margin-top: 40px;">Rúbrica de Evaluación para las Preguntas Abiertas</h3>
+            <p>Esta rúbrica (basada en la Taxonomía de Bloom, nivel de Análisis) puede servir como guía para autoevaluar la profundidad de tus respuestas.</p>
+             <div style="overflow-x:auto;">
+                 <table class="rubrica">
+                    <thead>
+                        <tr>
+                            <th>Criterio</th>
+                            <th>Excelente (4 pts)</th>
+                            <th>Bueno (3 pts)</th>
+                            <th>Satisfactorio (2 pts)</th>
+                            <th>Necesita Mejora (1 pt)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Análisis del Desafío (Preg. 1)</strong></td>
+                            <td>Identifica claramente el concepto, detalla el proceso de superación con estrategias específicas y efectivas.</td>
+                            <td>Identifica el concepto y describe una estrategia general para superarlo.</td>
+                            <td>Identifica el concepto pero la descripción de la estrategia es vaga o incompleta.</td>
+                            <td>No identifica claramente un desafío o no describe una estrategia.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Aplicación y Transferencia (Preg. 2)</strong></td>
+                            <td>Proporciona un ejemplo original y bien desarrollado, explicando con precisión cómo se aplican los principios del equilibrio dinámico.</td>
+                            <td>Proporciona un ejemplo relevante y explica la conexión con el equilibrio, aunque con menor detalle.</td>
+                            <td>Proporciona un ejemplo, pero la conexión con el equilibrio dinámico es superficial o parcialmente incorrecta.</td>
+                            <td>El ejemplo es irrelevante o no se explica la conexión.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Curiosidad y Pensamiento Crítico (Preg. 3)</strong></td>
+                            <td>Formula preguntas complejas y bien definidas que demuestran una profunda reflexión y extienden el aprendizaje más allá del contenido.</td>
+                            <td>Formula preguntas relevantes que surgen directamente del contenido presentado.</td>
+                            <td>Formula preguntas básicas o de aclaración sobre el contenido.</td>
+                            <td>No formula preguntas o son irrelevantes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 10. Sección "Certificado" -->
+        <section id="certificado" class="seccion">
+            <h2>Generación de Certificado</h2>
+            <div id="certificate-prompt">
+                <p>¡Felicitaciones! Has completado la evaluación con éxito. Haz clic en el botón de abajo para generar tu certificado de participación.</p>
+                <button id="generate-cert-btn" class="btn btn-center">Generar Certificado</button>
+            </div>
+            <div id="certificate-locked" style="display: none;">
+                 <p>Aún no has aprobado la evaluación final. Debes obtener al menos un 60% para desbloquear tu certificado.</p>
+            </div>
+            
+            <!-- Contenido del Certificado (oculto, para generar el PDF) -->
+            <div style="position: absolute; left: -9999px;">
+                <div id="certificate-wrapper">
+                    <div id="certificate-content">
+                        <h3>Certificado de Participación</h3>
+                        <p>Se otorga a:</p>
+                        <h2 id="cert-name"></h2>
+                        <p>Por haber completado exitosamente la cápsula educativa</p>
+                        <h1>¡Misión Equilibrio!</h1>
+                        <p>Este certificado acredita la participación en un módulo de <strong>2 horas académicas</strong> sobre los fundamentos del Equilibrio Químico, dentro del marco del curso <strong>QUI1145 QUÍMICA GENERAL</strong>.</p>
+                        <br>
+                        <p><strong>Descripción:</strong> 🎉 ¡Equilibrio alcanzado! ⚖️💥 ¡Felicidades! Has demostrado que puedes mantener el balance como un verdadero maestro del equilibrio químico. Recuerda: en química y en la vida, los cambios se equilibran… ¡con conocimiento y actitud!</p>
+                        <br>
+                        <div id="qr-code-container"></div>
+                        <p style="font-size: 0.9em;">Escanea el código QR para verificar la validez de este certificado.</p>
+                        <p style="font-size: 0.9em;"><a href="https://sites.google.com/uct.cl/equilibrioquimico/inicio" target="_blank">https://sites.google.com/uct.cl/equilibrioquimico/inicio</a></p>
+                        <br>
+                        <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 20px;">
+                            <div>
+                                <p><strong>Profe Aida</strong></p>
+                                <p style="border-top: 1px solid #333; padding-top: 5px;">Instructor</p>
+                            </div>
+                            <div>
+                                <p id="cert-date"></p>
+                                <p style="border-top: 1px solid #333; padding-top: 5px;">Fecha de Emisión</p>
+                            </div>
+                        </div>
+                         <p style="font-size: 0.8em; margin-top: 20px;">Válido por 1 año desde la fecha de emisión.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Elementos Transversales -->
+        <button id="clear-data-btn" title="Borrar todos los datos y reiniciar" style="position: fixed; bottom: 20px; left: 20px; background: var(--accent-color); color: white; border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; z-index: 1002;">🗑️</button>
+        
+        <button id="chatbot-button" title="Abrir Chatbot de Ayuda">
+            <!-- SVG Chatbot Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="32px" height="32px"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12zM7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/></svg>
+        </button>
+
+        <div id="chatbot-modal">
+            <div id="chatbot-modal-content">
+                <div id="chatbot-modal-header">
+                    <span>Chat de Ayuda</span>
+                    <button id="close-chatbot">&times;</button>
+                </div>
+                <iframe id="chatbot-iframe" src="https://landbot.online/v3/H-3050726-6OFH52W8K7RWZCE7/index.html"></iframe>
+            </div>
+        </div>
+
+    </div> <!-- Fin del container -->
+
+
+    <script>
+        // JAVASCRIPT (script.js)
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- SELECTORES DE ELEMENTOS ---
+            const sections = document.querySelectorAll('.seccion');
+            const navLinks = document.querySelectorAll('#menu-links a');
+            const progressBar = document.getElementById('progress-bar');
+            const menuBtn = document.getElementById('floating-menu-btn');
+            const menuLinks = document.getElementById('menu-links');
+
+            // --- ESTADO DE LA APLICACIÓN ---
+            let currentSection = 'ingreso';
+            const totalSections = sections.length - 1; // No contamos el ingreso en la barra
+            let user = {};
+            let player; // Variable para el reproductor de YouTube
+            let quizInterval;
+            
+            const videoQuizzes = [
+                { time: 163, question: "¿Qué sucede en el frasco de acetona tapado que demuestra un equilibrio?", options: ["La acetona deja de evaporarse.", "Las moléculas se escapan lentamente.", "La evaporación y la condensación ocurren a la misma velocidad.", "Solo ocurre la condensación."], answer: 2, triggered: false },
+                { time: 383, question: "En la reacción de H₂ y I₂, ¿por qué la mezcla final no es incolora?", options: ["Porque el HI también es púrpura.", "Porque la reacción es reversible y aún queda I₂.", "Porque la reacción no llegó a completarse.", "Porque el H₂ interfiere con el color."], answer: 1, triggered: false },
+                { time: 598, question: "¿Cuándo se considera que la reacción H₂(g) + I₂(g) ⇌ 2HI(g) ha alcanzado el equilibrio?", options: ["Cuando todo el yodo se ha consumido.", "Cuando el color púrpura desaparece por completo.", "Cuando la intensidad del color púrpura deja de cambiar.", "Cuando solo queda HI en el recipiente."], answer: 2, triggered: false },
+                { time: 865, question: "En equilibrio, ¿cómo son las velocidades de la reacción directa (formación de HI) y la reacción inversa (descomposición de HI)?", options: ["La velocidad directa es mayor.", "La velocidad inversa es mayor.", "Ambas velocidades son cero.", "Las velocidades son iguales."], answer: 3, triggered: false },
+                { time: 937, question: "La constante de equilibrio (Kc) se expresa como la concentración de [Productos]/[Reactivos]. ¿Qué representa el exponente al que se eleva cada concentración?", options: ["La masa molar del compuesto.", "El coeficiente estequiométrico de la reacción.", "La temperatura de la reacción.", "La constante de velocidad."], answer: 1, triggered: false }
+            ];
+
+            // Objeto con las respuestas correctas para las 10 preguntas
+            const finalTestAnswers = { 
+                q1: 'b', q2: 'c', q3: 'b', q4: 'c', q5: 'd',
+                q6: 'c', q7: 'c', q8: 'c', q9: 'c', q10: 'b' 
+            };
+            let testAttempts = 3;
+            let timerInterval;
+
+            // --- FUNCIONES ---
+
+            // Función para mostrar una sección y ocultar las demás
+            const showSection = (id) => {
+                if (id === 'ingreso' && localStorage.getItem('userData')) {
+                    id = 'portada'; // Si ya hay datos, saltar al login
+                }
+                
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                const activeSection = document.getElementById(id);
+                if (activeSection) {
+                    activeSection.classList.add('active');
+                    currentSection = id;
+                    updateProgress();
+                    window.scrollTo(0, 0); // Ir al inicio de la página al cambiar de sección
+                }
+            };
+
+            // Función para actualizar la barra de progreso
+            const updateProgress = () => {
+                let progress = 0;
+                const sectionIds = Array.from(sections).map(s => s.id);
+                const currentIndex = sectionIds.indexOf(currentSection);
+                
+                if (currentIndex > 0) { // No contar la sección de ingreso
+                    progress = ((currentIndex) / totalSections) * 100;
+                }
+                progressBar.style.width = `${progress}%`;
+            };
+
+            // Función para cargar datos del usuario desde localStorage
+            const loadUserData = () => {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    user = JSON.parse(userData);
+                    showSection('portada'); // Si hay datos, vamos a la portada
+                } else {
+                    showSection('ingreso'); // Si no, al formulario
+                }
+            };
+
+            // --- INICIALIZACIÓN Y EVENT LISTENERS ---
+
+            // 1. Formulario de Ingreso
+            const loginForm = document.getElementById('login-form');
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                user.nombre = document.getElementById('nombre').value;
+                user.email = document.getElementById('email').value;
+                user.rut = document.getElementById('rut').value;
+                localStorage.setItem('userData', JSON.stringify(user));
+                alert(`¡Hola, ${user.nombre}! Datos guardados correctamente.`);
+                showSection('portada');
+            });
+            
+            // 2. Botón de Inicio en Portada
+            document.getElementById('start-btn').addEventListener('click', () => {
+                showSection('introduccion');
+            });
+            
+            // 3. Navegación del Menú Flotante
+            menuBtn.addEventListener('click', () => {
+                menuLinks.style.display = menuLinks.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!menuBtn.contains(e.target) && !menuLinks.contains(e.target)) {
+                    menuLinks.style.display = 'none';
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.target.getAttribute('href').substring(1);
+                    
+                    if(targetId === 'certificado') {
+                        checkCertificateAccess();
+                    }
+                    
+                    showSection(targetId);
+                    menuLinks.style.display = 'none'; // Ocultar menú después de click
+                    
+                    if (targetId === 'desarrollo' && !player) {
+                        loadYouTubeAPI();
+                    }
+                     if (targetId === 'evaluacion') {
+                        startTest();
+                    }
+                });
+            });
+            
+            // 4. Lógica del Video-Quiz (YouTube API)
+            const loadYouTubeAPI = () => {
+                 if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+                    const tag = document.createElement('script');
+                    tag.src = "https://www.youtube.com/iframe_api";
+                    const firstScriptTag = document.getElementsByTagName('script')[0];
+                    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+                 } else {
+                     onYouTubeIframeAPIReady();
+                 }
+            };
+
+            window.onYouTubeIframeAPIReady = () => {
+                player = new YT.Player('player', {
+                    height: '315',
+                    width: '560',
+                    videoId: 'VF99C7WXWuM',
+                    playerVars: {
+                        'playsinline': 1,
+                        'rel': 0
+                    },
+                    events: {
+                        'onStateChange': onPlayerStateChange
+                    }
+                });
+            }
+
+            const onPlayerStateChange = (event) => {
+                if (event.data == YT.PlayerState.PLAYING) {
+                    quizInterval = setInterval(checkVideoTime, 1000);
+                } else {
+                    clearInterval(quizInterval);
+                }
+            };
+            
+            const checkVideoTime = () => {
+                if (!player || typeof player.getCurrentTime !== 'function') return;
+                const currentTime = Math.floor(player.getCurrentTime());
+                
+                for (const quiz of videoQuizzes) {
+                    if (currentTime === quiz.time && !quiz.triggered) {
+                        player.pauseVideo();
+                        quiz.triggered = true;
+                        showVideoQuiz(quiz);
+                        break; 
+                    }
+                }
+            };
+            
+            const showVideoQuiz = (quiz) => {
+                const modal = document.getElementById('video-quiz-modal');
+                document.getElementById('video-quiz-question').innerText = quiz.question;
+                const optionsContainer = document.getElementById('video-quiz-options');
+                const feedbackContainer = document.getElementById('video-quiz-feedback');
+                
+                optionsContainer.innerHTML = '';
+                feedbackContainer.innerHTML = '';
+                feedbackContainer.style.display = 'none';
+
+                quiz.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.onclick = () => {
+                        const isCorrect = index === quiz.answer;
+                        feedbackContainer.innerText = isCorrect ? '¡Correcto!' : 'Respuesta incorrecta. Intenta recordar lo visto en el video.';
+                        feedbackContainer.style.backgroundColor = isCorrect ? 'var(--success-color)' : 'var(--error-color)';
+                        feedbackContainer.style.color = 'white';
+                        feedbackContainer.style.display = 'block';
+
+                        // Deshabilitar botones después de la selección
+                        optionsContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                            player.playVideo();
+                        }, 2000);
+                    };
+                    optionsContainer.appendChild(button);
+                });
+
+                modal.style.display = 'flex';
+            };
+            
+            // 5. Lógica de la Evaluación Final
+            const finalTestForm = document.getElementById('final-test-form');
+            const submitTestBtn = document.getElementById('submit-test-btn');
+            const retryTestBtn = document.getElementById('retry-test-btn');
+            const attemptsInfo = document.getElementById('attempts-info');
+            
+            const startTest = () => {
+                if (testAttempts > 0) {
+                    // Resetear formulario
+                    finalTestForm.reset();
+                    document.querySelectorAll('#final-test-form .question').forEach(q => {
+                        q.classList.remove('feedback-correct', 'feedback-incorrect');
+                    });
+                    document.getElementById('test-results').innerHTML = '';
+                    submitTestBtn.disabled = false;
+                    retryTestBtn.style.display = 'none';
+                    
+                    // Iniciar temporizador
+                    let timeLeft = 15 * 60;
+                    clearInterval(timerInterval);
+                    timerInterval = setInterval(() => {
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            alert("¡Se acabó el tiempo!");
+                            submitTest();
+                        } else {
+                            timeLeft--;
+                            const minutes = Math.floor(timeLeft / 60);
+                            const seconds = timeLeft % 60;
+                            document.getElementById('timer').innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        }
+                    }, 1000);
+                }
+            };
+            
+            const submitTest = () => {
+                clearInterval(timerInterval);
+                submitTestBtn.disabled = true;
+                
+                let score = 0;
+                const totalQuestions = Object.keys(finalTestAnswers).length;
+                
+                for (const qId in finalTestAnswers) {
+                    const questionEl = document.getElementById(qId);
+                    const selected = finalTestForm.elements[qId].value;
+                    if (selected === finalTestAnswers[qId]) {
+                        score++;
+                        questionEl.classList.add('feedback-correct');
+                        questionEl.classList.remove('feedback-incorrect');
+                    } else {
+                         questionEl.classList.add('feedback-incorrect');
+                         questionEl.classList.remove('feedback-correct');
+                    }
+                }
+                
+                const percentage = (score / totalQuestions) * 100;
+                const resultsEl = document.getElementById('test-results');
+                
+                let resultMessage = `<h3>Resultado: ${score} de ${totalQuestions} correctas (${percentage.toFixed(0)}%)</h3>`;
+                
+                if (percentage >= 60) {
+                    resultMessage += '<p style="color: var(--success-color);">¡Felicidades! Has aprobado la evaluación.</p>';
+                    localStorage.setItem('testPassed', 'true');
+                    checkCertificateAccess();
+                } else {
+                    testAttempts--;
+                    attemptsInfo.innerText = `Intentos restantes: ${testAttempts}`;
+                    resultMessage += `<p style="color: var(--error-color);">No has alcanzado el 60% necesario para aprobar.</p>`;
+                    if (testAttempts > 0) {
+                        retryTestBtn.style.display = 'block';
+                    } else {
+                        resultMessage += '<p>Has agotado todos tus intentos.</p>';
+                    }
+                }
+                resultsEl.innerHTML = resultMessage;
+            };
+            
+            finalTestForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                submitTest();
+            });
+
+            retryTestBtn.addEventListener('click', startTest);
+            
+            // 6. Cierre y Preguntas Metacognitivas
+            document.getElementById('save-meta-btn').addEventListener('click', () => {
+                const metaAnswers = {
+                    q1: document.getElementById('meta1').value,
+                    q2: document.getElementById('meta2').value,
+                    q3: document.getElementById('meta3').value,
+                };
+                localStorage.setItem('metaAnswers', JSON.stringify(metaAnswers));
+                alert('Tus reflexiones han sido guardadas.');
+            });
+
+            // 7. Lógica del Certificado
+            const checkCertificateAccess = () => {
+                const testPassed = localStorage.getItem('testPassed') === 'true';
+                document.getElementById('certificate-prompt').style.display = testPassed ? 'block' : 'none';
+                document.getElementById('certificate-locked').style.display = testPassed ? 'none' : 'block';
+            };
+            
+            document.getElementById('generate-cert-btn').addEventListener('click', () => {
+                const userData = JSON.parse(localStorage.getItem('userData'));
+                if (!userData) {
+                    alert('No se encontraron datos de usuario. Por favor, completa el formulario de ingreso.');
+                    showSection('ingreso');
+                    return;
+                }
+                
+                // Poblar datos del certificado
+                document.getElementById('cert-name').innerText = userData.nombre;
+                const today = new Date();
+                document.getElementById('cert-date').innerText = today.toLocaleDateString('es-ES');
+                
+                // Generar QR
+                const qrContainer = document.getElementById('qr-code-container');
+                qrContainer.innerHTML = ''; // Limpiar QR anterior
+                new QRCode(qrContainer, {
+                    text: "https://sites.google.com/uct.cl/equilibrioquimico/inicio",
+                    width: 150,
+                    height: 150,
+                });
+                
+                // Generar PDF
+                const element = document.getElementById('certificate-wrapper');
+                const opt = {
+                    margin:       0.5,
+                    filename:     `Certificado_MisionEquilibrio_${userData.nombre}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+                };
+
+                html2pdf().from(element).set(opt).save();
+            });
+            
+            // 8. Elementos Transversales (Chatbot, Borrar Datos)
+            document.getElementById('clear-data-btn').addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que deseas borrar todos tus datos y progreso? Esta acción no se puede deshacer.')) {
+                    localStorage.clear();
+                    window.location.reload();
+                }
+            });
+            
+            const chatbotModal = document.getElementById('chatbot-modal');
+            document.getElementById('chatbot-button').addEventListener('click', () => {
+                chatbotModal.style.display = 'flex';
+            });
+            document.getElementById('close-chatbot').addEventListener('click', () => {
+                chatbotModal.style.display = 'none';
+            });
+            
+            // --- INICIALIZACIÓN ---
+            loadUserData();
+            checkCertificateAccess(); // Comprobar acceso al certificado al cargar la página
+        });
+    </script>
+
+</body>
+</html>
